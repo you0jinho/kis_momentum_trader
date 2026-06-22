@@ -3,7 +3,7 @@
 한국투자증권(KIS) Open API 모의투자 환경에서 동작하는 REST 전용(웹소켓 미사용)
 초반 변동성 돌파 전략 자동매매 프로그램입니다.
 # 교수님 PROJECT_EXPLANATION.md 를 직접 클릭해서 읽어주세요!
-> 코드설**은 [`PROJECT_EXPLANATION.md`](./PROJECT_EXPLANATION.md)에
+> 코드설명**은 [`PROJECT_EXPLANATION.md`](./PROJECT_EXPLANATION.md)에
 > 따로 정리했습니다.
 ## 전략 개요
 - **대상**: 삼성전자(005930), SK하이닉스(000660), 현대차(005380),
