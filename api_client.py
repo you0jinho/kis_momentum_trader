@@ -61,7 +61,16 @@ class ApiClient:
                 else:
                     res = requests.post(url, headers=headers, json=body, timeout=TIMEOUT)
                 res.raise_for_status()
-                return res.json()
+
+                result = res.json()
+                # KIS는 실패해도 HTTP 200을 주고, rt_cd/msg1으로 성공 여부를 알려준다.
+                # rt_cd가 "0"이 아니면 명확한 에러로 즉시 알려서, 빈 값(0원 등)으로
+                # 조용히 넘어가거나 실패한 주문을 성공으로 잘못 기록하는 것을 방지한다.
+                rt_cd = result.get("rt_cd")
+                if rt_cd is not None and rt_cd != "0":
+                    msg1 = result.get("msg1", "알 수 없는 오류")
+                    raise RuntimeError(f"[KIS 응답 오류] {path} - rt_cd={rt_cd}, msg1={msg1}")
+                return result
             except requests.exceptions.Timeout as e:
                 last_error = e
                 logger.error(f"[API 타임아웃] 시도 {attempt}/{MAX_RETRIES + 1} - {path}")

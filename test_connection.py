@@ -27,8 +27,11 @@ def main() -> None:
         logger.info(f"[연결테스트] 삼성전자(005930) 현재가 조회 성공: {price:,}원")
 
         account = Account(client)
-        holdings, cash = account.get_balances()
-        logger.info(f"[연결테스트] 잔고조회 성공 - 보유종목: {holdings} / 가용현금: {cash:,}원")
+        holdings, cash_info = account.get_balances()
+        logger.info(
+            f"[연결테스트] 잔고조회 성공 - 보유종목: {holdings} / "
+            f"예수금: {cash_info['dnca_tot_amt']:,}원"
+        )
 
         logger.info("[연결테스트] 모든 항목 정상 - main.py 실행 준비가 된 상태입니다.")
     except Exception as e:

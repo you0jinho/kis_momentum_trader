@@ -58,6 +58,22 @@ UNIVERSE: List[str] = [
     "196170",  # 알테오젠 (바이오, 코스닥, 고변동성)
 ]
 
+# 종목코드 -> 종목명 (로그에 코드만 찍히면 알아보기 어려워서, 매수/매도 시
+# 사람이 읽기 쉬운 이름을 같이 보여주기 위한 매핑)
+SYMBOL_NAMES: dict = {
+    "005930": "삼성전자",
+    "000660": "SK하이닉스",
+    "005380": "현대차",
+    "247540": "에코프로비엠",
+    "042700": "한미반도체",
+    "196170": "알테오젠",
+}
+
+
+def get_symbol_name(symbol: str) -> str:
+    """매핑에 없는 종목이어도 코드 자체를 이름처럼 반환해서 안전하게 동작."""
+    return SYMBOL_NAMES.get(symbol, symbol)
+
 # ── 전략 시간 구간 (시, 분) ───────────────────────────────────────
 RANGE_START = (9, 0)    # 고가/저가 기록 시작
 RANGE_END = (9, 5)      # 고가/저가 기록 종료 -> 돌파 기준가 확정
@@ -80,8 +96,14 @@ RANGE_POLL_SEC: int = 20   # 09:00~09:05 구간
 TRADE_POLL_SEC: int = 18   # 09:05~09:30 구간 (매수 감시 + 청산 감시)
 IDLE_POLL_SEC: int = 30    # 09:00 이전 대기 구간
 
-# ── 토큰 캐시 파일 ───────────────────────────────────────────────
+# 종목 여러 개를 한 바퀴 돌 때, 한꺼번에 몰아서 호출하면 모의투자가 순간적인
+# 버스트로 보고 막을 수 있어서 (간헐적 500 에러 원인 중 하나), 종목 하나씩
+# 조회할 때마다 살짝 쉬어준다.
+SYMBOL_CALL_DELAY_SEC: float = 0.5
+
+# ── 상태 저장 파일 (멈췄다가 재시작해도 당일 진행 상황 복구) ──────
 TOKEN_CACHE_PATH: str = "token_cache.json"
+STATE_FILE_PATH: str = "trader_state.json"
 
 # ── 주문 구분 코드 ───────────────────────────────────────────────
 ORD_DVSN_LIMIT: str = "00"   # 지정가
@@ -90,11 +112,12 @@ ORD_DVSN_MARKET: str = "01"  # 시장가
 
 class TrId:
     """
-    ⚠️ 확인 필요: 아래 tr_id 중 BUY_ORDER 는 다수 공식 자료에서 확인된 값이고,
-    나머지는 한투 GitHub 샘플(koreainvestment/open-trading-api)이나
-    KIS Developers 포털 문서에서 실행 전 반드시 재확인할 것.
+    ✅ CURRENT_PRICE/BALANCE/BUY_ORDER/SELL_ORDER 모두 test_connection.py 및
+    실제 매수/매도 시도에서 호출 성공(rt_cd="0")을 확인했음. orders.py가 이제
+    응답의 ODNO(주문번호)를 로그에 남기므로, 한투 앱/HTS 주문내역에서 그
+    번호로 실제 접수 여부를 대조 확인할 수 있다.
     """
-    CURRENT_PRICE = "FHKST01010100"  # 주식현재가 시세조회 - 확인 필요
-    BALANCE = "VTTC8434R"            # 모의투자 주식잔고조회 - 확인 필요
-    BUY_ORDER = "VTTC0802U"          # 모의투자 주식 현금매수주문
-    SELL_ORDER = "VTTC0801U"         # 모의투자 주식 현금매도주문 - 확인 필요
+    CURRENT_PRICE = "FHKST01010100"  # 주식현재가 시세조회 - 확인됨
+    BALANCE = "VTTC8434R"            # 모의투자 주식잔고조회 - 확인됨
+    BUY_ORDER = "VTTC0802U"          # 모의투자 주식 현금매수주문 - 확인됨
+    SELL_ORDER = "VTTC0801U"         # 모의투자 주식 현금매도주문 - 확인됨
